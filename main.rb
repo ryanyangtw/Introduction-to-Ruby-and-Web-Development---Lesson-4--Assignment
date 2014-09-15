@@ -1,5 +1,9 @@
 require 'rubygems'
 require 'sinatra'
+require 'shotgun'
+require 'pry'
+require 'active_support/core_ext/object/blank'
+require 'sinatra/flash'
 
 set :sessions, true
 
@@ -52,20 +56,28 @@ helpers do
   def winner!(msg)
     @play_again = true
     @show_hit_or_stay_buttons = false
-    @success = "<strong>#{session[:player_name]} wins!</strong> #{msg}"
+    session[:player_money] += session[:bet_amount]
+    @success = "<strong>#{session[:player_name]} wins!</strong> #{msg}. #{session[:player_name]} now has $#{session[:player_money]}."
   end
 
   def loser!(msg)
     @play_again = true
     @show_hit_or_stay_buttons = false
-    @error = "<strong>#{session[:player_name]} loses.</strong> #{msg}"
+    session[:player_money] -= session[:bet_amount]
+    @error = "<strong>#{session[:player_name]} loses.</strong> #{msg}. #{session[:player_name]} now has $#{session[:player_money]}."
   end
 
   def tie!(msg)
     @play_again = true
     @show_hit_or_stay_buttons = false
-    @success = "<strong>It's a tie!</strong> #{msg}"
+    @success = "<strong>It's a tie!</strong> #{msg}. #{session[:player_name]} now has $#{session[:player_money]}."
   end
+
+  def display_player_message
+    "#{session[:player_name]} has #{calculate_total(session[:player_cards])}. What would ryan  like to do?
+      <small>#{session[:player_name]} has <strong>$#{session[:player_money]} </strong> total. Bet amount this round: <strong>$#{session[:bet_amount]}</strong></small>"
+  end
+
 end
 
 before do
@@ -91,7 +103,27 @@ post '/new_player' do
   end
 
   session[:player_name] = params[:player_name]
-  redirect '/game'
+  session[:player_money] = 500
+  redirect '/bet'
+end
+
+get '/bet' do
+  erb :bet
+end
+
+post '/set_bet_amount' do
+  bet_amount = params[:bet_amount].to_i
+  #binding.pry
+  if(bet_amount <= 0)
+    @error = "Sorry, Your bet amount is invalid"
+    erb :bet
+  elsif(session[:player_money] >= bet_amount)
+    session[:bet_amount] = bet_amount
+    redirect '/game'
+  else
+    @error = "Sorry, You don't have enough money"
+    erb :bet
+  end
 end
 
 get '/game' do
@@ -110,6 +142,13 @@ get '/game' do
   session[:dealer_cards] << session[:deck].pop
   session[:player_cards] << session[:deck].pop
 
+  player_total = calculate_total(session[:player_cards])
+  if player_total == BLACKJACK_AMOUNT
+    winner!("#{session[:player_name]} hit blackjack.")
+  elsif player_total > BLACKJACK_AMOUNT
+    loser!("It looks like #{session[:player_name]} busted at #{player_total}.")
+  end
+
   erb :game
 end
 
@@ -123,7 +162,7 @@ post '/game/player/hit' do
     loser!("It looks like #{session[:player_name]} busted at #{player_total}.")
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/player/stay' do
@@ -151,7 +190,7 @@ get '/game/dealer' do
     @show_dealer_hit_button = true
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/dealer/hit' do
