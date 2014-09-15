@@ -1,5 +1,4 @@
 $( document ).ready(function(){
-  alert('fuck');
   $(document).on('click', '#hit_form input',function(){
     
     $.ajax({

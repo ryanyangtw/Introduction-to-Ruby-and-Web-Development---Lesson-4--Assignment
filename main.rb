@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'shotgun'
-require 'pry'
+#require 'pry'
 require 'active_support/core_ext/object/blank'
 require 'sinatra/flash'
 
