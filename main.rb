@@ -1,9 +1,9 @@
 require 'rubygems'
 require 'sinatra'
-#require 'shotgun'
+require 'shotgun'
 #require 'pry'
-#require 'active_support/core_ext/object/blank'
-#require 'sinatra/flash'
+require 'active_support/core_ext/object/blank'
+require 'sinatra/flash'
 
 set :sessions, true
 
