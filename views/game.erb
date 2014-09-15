@@ -1,12 +1,12 @@
 <div id="div-game">
 
-      <%if @error %>
+    <%if @error %>
       <div class="alert alert-error"><%=@error%></div>
     <% end %>
     <%if @success %>
       <div class="alert alert-success"><%=@success%></div>
     <% end %>
-    
+
   <h1>Blackjack!</h1>
 
   <p>Welcome <%= session[:player_name] %>.</p>
